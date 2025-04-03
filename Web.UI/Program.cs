@@ -50,6 +50,7 @@ builder.Services.AddAuthentication(options =>
     //options.Scope.Add("profile"); //<<<requested by middleware by default
     //options.CallbackPath = new PathString("signin-oidc"); //redirect uri in IDP, also default
 
+    options.GetClaimsFromUserInfoEndpoint = true;
     options.SaveTokens = true; //save tokens in cookie
     //options.SignedOutCallbackPath : default = host / port / signout - callback - oidc - register in IDP
 });
