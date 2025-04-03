@@ -54,6 +54,7 @@ public static class Config
                 {
                     new Secret("secret".Sha256()) // Hashed secret used for client authentication
                 }
+                //RequireConsent = true // consent to share needed info
             }
        };
 }
