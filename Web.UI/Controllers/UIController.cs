@@ -27,6 +27,13 @@ namespace Web.UI.Controllers
 
             return View(new IndexViewModel());
         }
+        
+        public async Task<IActionResult> PremiumContent()
+        {
+            await LogIdentityInformation();
+            
+            return View(new PremiumViewModel());
+        }
 
         public async Task LogIdentityInformation()
         {

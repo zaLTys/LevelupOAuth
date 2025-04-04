@@ -5,13 +5,18 @@ using Microsoft.Net.Http.Headers;
 using Microsoft.Win32;
 using System.Runtime.Intrinsics.Arm;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews()
-    .AddJsonOptions(configure => 
+    .AddJsonOptions(configure =>
         configure.JsonSerializerOptions.PropertyNamingPolicy = null);
+
+JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 // create an HttpClient used for accessing the API
 builder.Services.AddHttpClient("APIClient", client =>
@@ -24,36 +29,50 @@ builder.Services.AddHttpClient("APIClient", client =>
 
 //add to configura authentication middleware
 builder.Services.AddAuthentication(options =>
-{
-    // Specifies the default authentication scheme used for authentication
-    // Cookie-based authentication scheme is set as the default
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    {
+        // Specifies the default authentication scheme used for authentication
+        // Cookie-based authentication scheme is set as the default
+        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 
-    // Specifies the default challenge scheme used when authentication is required
-    // OpenID Connect is used for authentication challenges
-    options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-})
-.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
+        // Specifies the default challenge scheme used when authentication is required
+        // OpenID Connect is used for authentication challenges
+        options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+    })
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
 // Adds OpenID Connect authentication for authenticating users
-.AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
-{
-    // Specifies the sign-in scheme to use cookie authentication for maintaining sessions
-    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
+    {
+        // Specifies the sign-in scheme to use cookie authentication for maintaining sessions
+        options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 
-    // Sets the authority (Identity Provider, IDP) URL for authentication
-    options.Authority = "https://localhost:5001"; //our IDP 
-    options.ClientId = "webuiclient"; //should match client id in IDP
-    options.ClientSecret = "secret"; //should match client secret in IDP
-    options.ResponseType = "code"; //code flow, PKCE auto enabled, later about that
+        // Sets the authority (Identity Provider, IDP) URL for authentication
+        options.Authority = "https://localhost:5001"; //our IDP 
+        options.ClientId = "webuiclient"; //should match client id in IDP
+        options.ClientSecret = "secret"; //should match client secret in IDP
+        options.ResponseType = "code"; //code flow, PKCE auto enabled, later about that
 
-    //options.Scope.Add("openid"); //<<<requested by middleware by default
-    //options.Scope.Add("profile"); //<<<requested by middleware by default
-    //options.CallbackPath = new PathString("signin-oidc"); //redirect uri in IDP, also default
+        //options.Scope.Add("openid"); //<<<requested by middleware by default
+        //options.Scope.Add("profile"); //<<<requested by middleware by default
+        //options.CallbackPath = new PathString("signin-oidc"); //redirect uri in IDP, also default
 
-    options.GetClaimsFromUserInfoEndpoint = true;
-    options.SaveTokens = true; //save tokens in cookie
-    //options.SignedOutCallbackPath : default = host / port / signout - callback - oidc - register in IDP
-});
+        options.ClaimActions.Remove("aud"); //remove filter
+        options.ClaimActions.DeleteClaim("sid");//remove claim (acutally)
+        options.ClaimActions.DeleteClaim("idp");//remove claim (acutally)
+
+        options.Scope.Add("roles");
+        
+        options.ClaimActions.MapJsonKey("role", "role");
+        
+        options.TokenValidationParameters = new TokenValidationParameters()
+        {
+            NameClaimType = "name",
+            RoleClaimType = "role"
+        };
+        
+        options.GetClaimsFromUserInfoEndpoint = true;
+        options.SaveTokens = true; //save tokens in cookie
+        //options.SignedOutCallbackPath : default = host / port / signout - callback - oidc - register in IDP
+    });
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

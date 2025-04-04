@@ -22,6 +22,18 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="UI" asp-action="Index">Home</a>
                         </li>
+                        @if (User.IsInRole("PremiumUser"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="UI" asp-action="PremiumContent" >Premium CanSeeThis</a>
+                            </li>
+                        }
+                        @if (User.IsInRole("FreeUser"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Authentication" >Free user can see this</a>
+                            </li>
+                        }
                         @if (User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
