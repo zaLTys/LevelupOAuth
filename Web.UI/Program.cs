@@ -18,13 +18,17 @@ builder.Services.AddControllersWithViews()
 
 JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
+builder.Services.AddOpenIdConnectAccessTokenManagement();
+
 // create an HttpClient used for accessing the API
-builder.Services.AddHttpClient("APIClient", client =>
+builder.Services.AddHttpClient("DemoWebApiClient", client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["WebApiRoot"]);
+    client.BaseAddress = new Uri(builder.Configuration["DemoWebApiRoot"]);
     client.DefaultRequestHeaders.Clear();
     client.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
-});
+//add token handler to client
+}).AddUserAccessTokenHandler()
+ .AddHttpMessageHandler(() => new LoggingHandler());
 
 
 //add to configura authentication middleware
@@ -38,8 +42,10 @@ builder.Services.AddAuthentication(options =>
         // OpenID Connect is used for authentication challenges
         options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
     })
-    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
-// Adds OpenID Connect authentication for authenticating users
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+    {
+        options.AccessDeniedPath = "/Authentication/AccessDenied";
+    })
     .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
     {
         // Specifies the sign-in scheme to use cookie authentication for maintaining sessions
@@ -60,6 +66,8 @@ builder.Services.AddAuthentication(options =>
         options.ClaimActions.DeleteClaim("idp");//remove claim (acutally)
 
         options.Scope.Add("roles");
+        
+        options.Scope.Add("demowebapi.fullaccess");
         
         options.ClaimActions.MapJsonKey("role", "role");
         

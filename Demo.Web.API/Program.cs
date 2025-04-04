@@ -12,29 +12,29 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Clear default claim type mapping to use claims as they are in the token
-//uncomment for auth
-//JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
-//uncomment for auth
-// builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//     .AddJwtBearer(options =>
-//     {
-//         // URL of the Identity Provider (IDP) to fetch metadata (discovery endpoint)
-//         options.Authority = "https://localhost:5001";
-//         
-//         // Expected audience value in the token (API name)
-//         options.Audience = "demowebapi";
-//
-//         options.TokenValidationParameters = new TokenValidationParameters
-//         {
-//             // Use "given_name" from the token as the Name claim
-//             NameClaimType = "given_name",
-//             // Use "role" from the token as the Role claim
-//             RoleClaimType = "role",
-//             // Accept only access tokens (type "at+jwt")
-//             ValidTypes = new[] { "at+jwt" }
-//         };
-//     });
+JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        // URL of the Identity Provider (IDP) to fetch metadata (discovery endpoint)
+        options.Authority = "https://localhost:5001";
+        
+        // Expected audience value in the token (API name)
+        options.Audience = "demowebapi";
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            // Use "given_name" from the token as the Name claim
+            NameClaimType = "given_name",
+            // Use "role" from the token as the Role claim
+            RoleClaimType = "role",
+            // Accept only access tokens (type "at+jwt")
+            ValidTypes = new[] { "at+jwt" }
+        };
+    });
 
 
 var app = builder.Build();
@@ -49,7 +49,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 //uncomment for auth
-//app.UseAuthentication();
+app.UseAuthentication();
 
 app.UseAuthorization();
 

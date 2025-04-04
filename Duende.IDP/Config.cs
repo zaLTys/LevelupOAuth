@@ -13,9 +13,20 @@ public static class Config
             new IdentityResource("roles", "Your roles", new[] { "role" })
         };
 
+    public static IEnumerable<ApiResource> ApiResources =>
+        new ApiResource[]
+        {
+            new ApiResource("demowebapi", "Demo Web API")
+            {
+                Scopes = { "demowebapi.fullaccess" }
+            }
+        };
+    
     public static IEnumerable<ApiScope> ApiScopes =>
         new ApiScope[]
-            { };
+        {
+            new ApiScope("demowebapi.fullaccess")
+        };
 
     public static IEnumerable<Client> Clients =>
        new Client[]
@@ -48,7 +59,8 @@ public static class Config
                 {
                     IdentityServerConstants.StandardScopes.OpenId, // Includes the 'sub' (subject) claim
                     IdentityServerConstants.StandardScopes.Profile, // Includes profile-related claims
-                    "roles"
+                    "roles",
+                    "demowebapi.fullaccess"
                 },
 
                 // Defines the secret(s) associated with the client for authentication

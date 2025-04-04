@@ -1,0 +1,21 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Access denied /ᐠ｡ꞈ｡ᐟ\</title>
+</head>
+<body>
+<div>
+    @if (User.Identity.IsAuthenticated)
+    {
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="" asp-controller="Authentication" asp-action="Logout">Logout to login as someone else</a>
+        </li>
+    }
+</div>
+</body>
+</html>

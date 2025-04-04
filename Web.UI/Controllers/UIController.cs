@@ -17,7 +17,7 @@ namespace Web.UI.Controllers
             ILogger<UIController> logger)
         {
             _httpClientFactory = httpClientFactory ??
-                throw new ArgumentNullException(nameof(httpClientFactory));
+                                 throw new ArgumentNullException(nameof(httpClientFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -25,13 +25,29 @@ namespace Web.UI.Controllers
         {
             await LogIdentityInformation();
 
-            return View(new IndexViewModel());
+            var httpClient = _httpClientFactory.CreateClient("DemoWebApiClient");
+
+            var request = new HttpRequestMessage(
+                HttpMethod.Get,
+                "/WeatherForecast");
+
+            var response = await httpClient.SendAsync(
+                request, HttpCompletionOption.ResponseHeadersRead);
+
+            response.EnsureSuccessStatusCode();
+
+            await using var responseStream = await response.Content.ReadAsStreamAsync();
+            using var reader = new StreamReader(responseStream);
+            var jsonString = await reader.ReadToEndAsync();
+
+            return View(new IndexViewModel(jsonString));
         }
-        
+
+        [Authorize(Roles = "PremiumUser")]
         public async Task<IActionResult> PremiumContent()
         {
             await LogIdentityInformation();
-            
+
             return View(new PremiumViewModel());
         }
 
@@ -40,6 +56,10 @@ namespace Web.UI.Controllers
             // get the saved identity token
             var identityToken = await HttpContext
                 .GetTokenAsync(OpenIdConnectParameterNames.IdToken);
+
+            // get the saved access token
+            var accessToken = await HttpContext
+                .GetTokenAsync(OpenIdConnectParameterNames.AccessToken);
 
             var userClaimsStringBuilder = new StringBuilder();
             foreach (var claim in User.Claims)
@@ -51,6 +71,8 @@ namespace Web.UI.Controllers
             // log token & claims
             _logger.LogInformation($"Identity token & user claims: " +
                                    $"\n{identityToken} \n{userClaimsStringBuilder}");
+            _logger.LogInformation($"Access token: " +
+                                   $"\n{accessToken}");
         }
     }
 }
